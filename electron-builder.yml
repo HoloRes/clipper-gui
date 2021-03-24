@@ -1,0 +1,12 @@
+appId: org.holores.clipper
+productName: Clipper
+copyright: MIT HoloRes
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - from: .
+    filter:
+      - package.json
+      - app
+publish: null
