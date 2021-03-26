@@ -1,5 +1,7 @@
 import { app } from 'electron';
 import serve from 'electron-serve';
+import { ElectronBlocker } from '@cliqz/adblocker-electron';
+import fetch from 'cross-fetch';
 import { createWindow } from './helpers';
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -14,8 +16,12 @@ if (isProd) {
   await app.whenReady();
 
   const mainWindow = createWindow('main', {
-    width: 1000,
     height: 600,
+    width: 1000,
+  });
+
+  ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then(blocker => {
+    blocker.enableBlockingInSession(session.defaultSession);
   });
 
   if (isProd) {
