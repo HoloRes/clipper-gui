@@ -1,6 +1,6 @@
 appId: org.holores.clipper
 productName: Clipper
-copyright: MIT HoloRes
+copyright: MIT Hololive Resort
 directories:
   output: dist
   buildResources: resources
