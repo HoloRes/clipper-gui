@@ -17,3 +17,4 @@ files:
     filter:
       - package.json
       - app
+      - main/helpers/preload.js
