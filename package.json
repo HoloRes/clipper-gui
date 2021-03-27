@@ -2,8 +2,7 @@
   "name": "clipper-gui",
   "description": "Clipper tool",
   "version": "0.0.1",
-  "author": "Hololive Resort",
-  "email": "hololiveresistance@yahoo.com",
+  "author": "Hololive Resort <hololiveresistance@yahoo.com> (https://discord.gg/HoloRes)",
   "main": "app/background.js",
   "scripts": {
     "dev": "nextron",
