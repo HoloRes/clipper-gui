@@ -1,12 +1,19 @@
 appId: org.holores.clipper
 productName: Clipper
 copyright: MIT Hololive Resort
+
 directories:
   output: dist
   buildResources: resources
+
+linux:
+  target:
+    - AppImage
+    - tar.gz
+    - deb
+
 files:
   - from: .
     filter:
       - package.json
       - app
-publish: null
