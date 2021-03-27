@@ -239,6 +239,7 @@ export default function Home({ toggleDarkMode }) {
 
         <br />
         <br />
+        {/* TODO: Add stitch clips and rescale checkboxes */}
         <Button
           variant="contained"
           color="secondary"
@@ -259,6 +260,7 @@ export default function Home({ toggleDarkMode }) {
         <br />
         {/* Should only show during clipping of course */}
         <LinearProgress variant="determinate" value={30} />
+        {/* TODO: Fix position css */}
         <IconButton
           style={{
             position: 'absolute',
