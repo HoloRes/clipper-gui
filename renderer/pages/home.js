@@ -1,16 +1,24 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import { createStyles, makeStyles } from '@material-ui/core/styles';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
 import ReactPlayer from 'react-player';
-import Input from '@material-ui/core/Input';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import Grid from '@material-ui/core/Grid';
-import IconButton from '@material-ui/core/IconButton';
 import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Brightness6Icon from '@material-ui/icons/Brightness6';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  Checkbox,
+  IconButton,
+  Grid,
+  LinearProgress,
+  Input,
+  Typography,
+  Button,
+  DialogActions,
+} from '@material-ui/core';
 
 const useStyles = makeStyles(theme =>
   createStyles({
@@ -37,6 +45,17 @@ export default function Home({ toggleDarkMode }) {
   const [allTimestampsValid, setAllTimeStampsValid] = useState(true);
 
   const [downloading, setDownloading] = useState(false);
+  const [progress, setProgress] = useState({
+    percentage: 0,
+    status: 'Downloading',
+  });
+
+  const [clipOptions, setClipOptions] = useState({
+    rescale: false,
+    stitch: false,
+  });
+
+  const [showClipMenu, setShowClipMenu] = useState(false);
 
   const playerRef = useRef(null);
 
@@ -61,6 +80,7 @@ export default function Home({ toggleDarkMode }) {
   useEffect(() => {
     window?.api?.receive('progressUpdate', data => {
       // * Either finish, error or progress number with status or whatever
+      // * Make sure to reset all states after finish
     });
   }, []);
 
@@ -152,9 +172,7 @@ export default function Home({ toggleDarkMode }) {
           value={timestamps[index][0]}
           error={!timestampsValid[index]}
           disabled={downloading}
-          onChange={event => {
-            updateTimestamp(event, index, 0);
-          }}
+          onChange={event => updateTimestamp(event, index, 0)}
         />
         <Input
           style={{ marginLeft: '2vw' }}
@@ -162,9 +180,7 @@ export default function Home({ toggleDarkMode }) {
           value={timestamps[index][1]}
           error={!timestampsValid[index]}
           disabled={downloading}
-          onChange={event => {
-            updateTimestamp(event, index, 1);
-          }}
+          onChange={event => updateTimestamp(event, index, 1)}
         />
         <IconButton
           color="primary"
@@ -239,11 +255,11 @@ export default function Home({ toggleDarkMode }) {
 
         <br />
         <br />
-        {/* TODO: Add stitch clips and rescale checkboxes */}
+
         <Button
           variant="contained"
           color="secondary"
-          onClick={startClipping}
+          onClick={() => setShowClipMenu(true)}
           disabled={
             downloading ||
             !(
@@ -259,11 +275,65 @@ export default function Home({ toggleDarkMode }) {
         <br />
         <br />
         {/* Should only show during clipping of course */}
-        <LinearProgress variant="determinate" value={30} />
-        {/* TODO: Fix position css */}
+        <LinearProgress
+          variant="determinate"
+          value={progress.percentage}
+          hidden={!downloading}
+        />
+        <Typography hidden={!downloading}>{progress.status}</Typography>
+
+        <Dialog open={showClipMenu} onClose={() => setShowClipMenu(false)}>
+          <DialogTitle onClose={() => setShowClipMenu(false)}>
+            Download settings
+          </DialogTitle>
+          <DialogContent dividers>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={clipOptions.stitch}
+                  onChange={() => {
+                    setClipOptions({
+                      ...clipOptions,
+                      stitch: !clipOptions.stitch,
+                    });
+                  }}
+                />
+              }
+              label="Stitch clips"
+            />
+            <br />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={clipOptions.rescale}
+                  onChange={() => {
+                    setClipOptions({
+                      ...clipOptions,
+                      rescale: !clipOptions.rescale,
+                    });
+                  }}
+                />
+              }
+              label="Rescale video"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => {
+                startClipping();
+                setShowClipMenu(false);
+              }}
+            >
+              Clip
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         <IconButton
           style={{
-            position: 'absolute',
+            position: 'fixed',
             // eslint-disable-next-line sort-keys
             background: '#19857b',
             color: '#fff',
