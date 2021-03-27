@@ -1,7 +1,5 @@
 import { app, ipcMain, session } from 'electron';
 import serve from 'electron-serve';
-import { ElectronBlocker } from '@cliqz/adblocker-electron';
-import fetch from 'cross-fetch';
 import updater from 'update-electron-app';
 import Store from 'electron-store';
 import path from 'path';
@@ -56,10 +54,6 @@ updater();
   });
 
   // * Progress updates should be done using `mainWindow.webContents.send('progressUpdate', number)`
-
-  ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then(blocker => {
-    blocker.enableBlockingInSession(session.defaultSession);
-  });
 
   if (isProd) {
     mainWindow.removeMenu();
