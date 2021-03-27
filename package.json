@@ -1,8 +1,8 @@
 {
   "private": true,
-  "name": "clipper",
+  "name": "clipper-gui",
   "description": "Clipper tool",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "author": "Hololive Resort",
   "main": "app/background.js",
   "scripts": {
@@ -14,7 +14,8 @@
     "@cliqz/adblocker-electron": "^1.20.4",
     "cross-fetch": "^3.1.2",
     "electron-serve": "1.1.0",
-    "electron-store": "7.0.2"
+    "electron-store": "7.0.2",
+    "update-electron-app": "^2.0.1"
   },
   "devDependencies": {
     "@ijsto/eslint-config": "3.0.1",
@@ -38,5 +39,14 @@
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-player": "2.9.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HoloRes/clipper-gui.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HoloRes/clipper-gui/issues"
+  },
+  "homepage": "https://github.com/HoloRes/clipper-gui#readme"
 }

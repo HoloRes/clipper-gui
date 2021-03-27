@@ -10,6 +10,7 @@ import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
 import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
+import Brightness6Icon from '@material-ui/icons/Brightness6';
 
 const useStyles = makeStyles(theme =>
   createStyles({
@@ -20,15 +21,23 @@ const useStyles = makeStyles(theme =>
   })
 );
 
-export default function Home() {
+export default function Home({ toggleDarkMode }) {
   const classes = useStyles({});
+
   const [clips, setClips] = useState([]);
   const [clipsHtml, setClipsHtml] = useState([]);
+
   const [currentClip, setCurrentClip] = useState([]);
+
   const [videoUrl, setVideoUrl] = useState('');
+
   const [inVidClippingAvailable, setInVidClippingAvailable] = useState(false);
   const [addClipAvailable, setAddClipAvailable] = useState(false);
-  const [errors, setErrors] = useState([]);
+
+  const [allTimestampsValid, setAllTimeStampsValid] = useState(true);
+
+  const [downloading, setDownloading] = useState(false);
+
   const playerRef = useRef(null);
 
   function secondParser(hms) {
@@ -42,7 +51,18 @@ export default function Home() {
     return date.toTimeString().replace(/.*(\d{2}:\d{2}:\d{2}).*/, '$1');
   }
 
-  const addClip = () => setClips([...clips, [,]]);
+  const addClip = () => setClips([...clips, [0, 0]]);
+
+  function startClipping() {
+    setDownloading(true);
+    window?.api?.send('startClipping', {});
+  }
+
+  useEffect(() => {
+    window?.api?.receive('progressUpdate', data => {
+      // * Either finish, error or progress number with status or whatever
+    });
+  }, []);
 
   useEffect(() => {
     setAddClipAvailable(
@@ -58,6 +78,11 @@ export default function Home() {
     setCurrentClip(clip);
     if (currentClip[0]) {
       const newClips = [...clips];
+      if (
+        newClips.length > 0 &&
+        (!newClips[newClips.length - 1][0] || !newClips[newClips.length - 1][1])
+      )
+        newClips.splice(newClips[newClips.length - 1], 1);
       newClips.push(clip);
       setClips(newClips);
       setCurrentClip([]);
@@ -85,13 +110,6 @@ export default function Home() {
       setClips(newClips);
     }
 
-    const checkValidTimestamp = timestamp =>
-      timestampParser(timestamp) === 'Invalid Date'
-        ? timestampParser(secondParser(timestamp)) !== 'Invalid Date'
-        : true;
-
-    const valid = clips.map(clip => clip.map(checkValidTimestamp));
-
     const timestamps = clips.map(clip =>
       clip.map(timestamp =>
         timestampParser(timestamp) === 'Invalid Date'
@@ -102,7 +120,29 @@ export default function Home() {
       )
     );
 
-    // TODO: Add timestamp validation (check if < 0, > video duration or if the end timestamp isn't lower than begin timestamp)
+    const timestampsValid = clips.map(clip => {
+      const clipTimestamps = [];
+
+      if (timestampParser(clip[0]) === 'Invalid Date') {
+        if (Number.isNaN(secondParser(clip[0]))) return false;
+        clipTimestamps.push(secondParser(clip[0]));
+      } else clipTimestamps.push(clip[0]);
+
+      if (timestampParser(clip[1]) === 'Invalid Date') {
+        if (Number.isNaN(secondParser(clip[1]))) return false;
+        clipTimestamps.push(secondParser(clip[1]));
+      } else clipTimestamps.push(clip[1]);
+
+      return !(
+        clipTimestamps[0] < 0 ||
+        clipTimestamps[1] < clipTimestamps[0] ||
+        (playerRef.current.getDuration() === null
+          ? true
+          : clipTimestamps[1] > playerRef.current.getDuration())
+      );
+    });
+    setAllTimeStampsValid(timestampsValid.indexOf(false) === -1);
+
     const newHtml = clips.map((clip, index) => (
       <Grid container justify="center" alignItems="center" key={index}>
         <Typography>{index + 1}:</Typography>
@@ -110,7 +150,8 @@ export default function Home() {
           style={{ marginLeft: '2vw' }}
           placeholder="Start time"
           value={timestamps[index][0]}
-          error={!valid[index][0]}
+          error={!timestampsValid[index]}
+          disabled={downloading}
           onChange={event => {
             updateTimestamp(event, index, 0);
           }}
@@ -119,7 +160,8 @@ export default function Home() {
           style={{ marginLeft: '2vw' }}
           placeholder="End time"
           value={timestamps[index][1]}
-          error={!valid[index][1]}
+          error={!timestampsValid[index]}
+          disabled={downloading}
           onChange={event => {
             updateTimestamp(event, index, 1);
           }}
@@ -128,6 +170,7 @@ export default function Home() {
           color="primary"
           aria-label="Delete this clip"
           component="span"
+          disabled={downloading}
           onClick={() => removeClip(index)}
         >
           <DeleteIcon />
@@ -136,7 +179,7 @@ export default function Home() {
     ));
 
     setClipsHtml(newHtml);
-  }, [clips]);
+  }, [clips, downloading]);
 
   return (
     <>
@@ -162,6 +205,7 @@ export default function Home() {
         <Input
           placeholder="Video URL"
           value={videoUrl}
+          disabled={downloading}
           error={!ReactPlayer.canPlay(videoUrl)}
           onChange={event => setVideoUrl(event.target.value)}
         />
@@ -171,7 +215,7 @@ export default function Home() {
           variant="contained"
           color="secondary"
           onClick={clipTimestamp}
-          disabled={!inVidClippingAvailable}
+          disabled={downloading || !inVidClippingAvailable}
         >
           {currentClip.length > 0 ? 'End clip' : 'Start clip'}
         </Button>
@@ -187,7 +231,7 @@ export default function Home() {
             onClick={addClip}
             color="primary"
             aria-label="Add clip"
-            disabled={!addClipAvailable}
+            disabled={downloading || !addClipAvailable}
           >
             <AddIcon />
           </IconButton>
@@ -198,14 +242,13 @@ export default function Home() {
         <Button
           variant="contained"
           color="secondary"
-          onClick={() => {
-            /* Start download */
-          }}
+          onClick={startClipping}
           disabled={
+            downloading ||
             !(
               ReactPlayer.canPlay(videoUrl) &&
               clips.length > 0 &&
-              errors.indexOf(true) === -1
+              allTimestampsValid
             )
           }
         >
@@ -213,8 +256,23 @@ export default function Home() {
         </Button>
 
         <br />
+        <br />
         {/* Should only show during clipping of course */}
         <LinearProgress variant="determinate" value={30} />
+        <IconButton
+          style={{
+            position: 'absolute',
+            // eslint-disable-next-line sort-keys
+            background: '#19857b',
+            color: '#fff',
+            // eslint-disable-next-line sort-keys
+            bottom: 10,
+            left: 10,
+          }}
+          onClick={toggleDarkMode}
+        >
+          <Brightness6Icon />
+        </IconButton>
       </div>
     </>
   );
