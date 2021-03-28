@@ -18,7 +18,7 @@
     "electron-builder": "22.10.5",
     "electron-serve": "1.1.0",
     "electron-store": "7.0.2",
-    "eslint": "7.22.0",
+    "eslint": "7.23.0",
     "eslint-config-airbnb": "18.2.1",
     "eslint-config-prettier": "4.3.0",
     "eslint-plugin-html": "5.0.5",
