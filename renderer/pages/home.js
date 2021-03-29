@@ -130,6 +130,10 @@ export default function Home({ toggleDarkMode }) {
       setClips(newClips);
     }
 
+    /* This functions gives the parsed timestamp from the seconds which is saved in state or directly the state back,
+          depending on if the state is a valid one. This is needed because the in video clipping saves seconds in state and
+          not a text timestamp.
+     */
     const timestamps = clips.map(clip =>
       clip.map(timestamp =>
         timestampParser(timestamp) === 'Invalid Date'
@@ -153,6 +157,9 @@ export default function Home({ toggleDarkMode }) {
         clipTimestamps.push(secondParser(clip[1]));
       } else clipTimestamps.push(clip[1]);
 
+      /* Checks if the start timestamp is below zero, if the end timestamp is before the start timestamp
+          and when possible checks if the the end timestamp is past the video duration.
+       */
       return !(
         clipTimestamps[0] < 0 ||
         clipTimestamps[1] < clipTimestamps[0] ||
@@ -163,6 +170,10 @@ export default function Home({ toggleDarkMode }) {
     });
     setAllTimeStampsValid(timestampsValid.indexOf(false) === -1);
 
+    /* TODO: The timestamp input field doesn't really work as expected,
+        since if you put numbers in, that will be the seconds, and will not automatically change
+        If you put 230 in, you would expect 00:02:30, but it would become 00:03:50
+    */
     const newHtml = clips.map((clip, index) => (
       <Grid container justify="center" alignItems="center" key={index}>
         <Typography>{index + 1}:</Typography>
@@ -274,7 +285,7 @@ export default function Home({ toggleDarkMode }) {
 
         <br />
         <br />
-        {/* Should only show during clipping of course */}
+
         <LinearProgress
           variant="determinate"
           value={progress.percentage}
